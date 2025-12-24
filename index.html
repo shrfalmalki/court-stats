@@ -1,275 +1,462 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إحصائيات خدمات المستفيدين - المحكمة الجزائية</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Akhbar:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            box-sizing: border-box; margin: 0; padding: 0;
-            font-family: 'Akhbar', 'Segoe UI', Tahoma, sans-serif;
-            background: #f0f8ff; overflow-x: hidden;
-        }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; position: relative; }
-        .official-header {
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
-            border: 2px solid rgba(55, 151, 119, 0.3); border-radius: 20px;
-            padding: 30px; margin-bottom: 20px; text-align: right;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        .official-title { font-size: 22px; font-weight: 700; color: #000; }
-        .header {
-            background: rgba(55, 151, 119, 0.85); backdrop-filter: blur(20px);
-            color: white; padding: 25px; border-radius: 20px; margin-bottom: 25px;
-            box-shadow: 0 8px 32px rgba(55, 151, 119, 0.3);
-        }
-        .header h1 { margin: 0; font-size: 36px; font-weight: 700; text-align: center; }
-        .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; justify-content: center; }
-        .nav-tab {
-            background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; color: white;
-        }
-        .nav-tab.active { background: white; color: #379777; border: 2px solid #f4ce14; font-weight: bold; }
-        .page { display: none; animation: fadeIn 0.4s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #45474b; }
-        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.5); border-radius: 12px; background: rgba(255,255,255,0.6); }
-        .btn { padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; border: none; }
-        .btn-primary { background: #379777; color: white; }
-        .btn-secondary { background: #f4ce14; color: #45474b; }
-        .stat-card { padding: 30px; border-radius: 20px; color: white; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.15); transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.6); border-radius: 15px; overflow: hidden; }
-        th, td { padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: right; }
-        thead { background: #379777; color: white; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
-        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #379777; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إحصائيات خدمات المستفيدين</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Akhbar:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* تنسيقات أساسية وتصميم */
+    body {
+      box-sizing: border-box; margin: 0; padding: 0;
+      font-family: 'Akhbar', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-weight: 400; background: #f0f8ff; height: 100%; overflow-x: hidden;
+    }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; min-height: 100%; position: relative; }
+    
+    /* الهيدر الرسمي */
+    .official-header {
+      background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
+      border: 2px solid rgba(55, 151, 119, 0.3); border-radius: 20px; padding: 30px;
+      margin-bottom: 20px; text-align: right;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .official-title { font-size: 22px; font-weight: 700; color: #000; margin-bottom: 8px; }
+    .official-subtitle { font-size: 18px; font-weight: 700; color: #000; margin-bottom: 6px; }
+    .official-department { font-size: 16px; font-weight: 700; color: #000; }
 
-<div id="loading" class="loading-overlay">
-    <div class="spinner"></div>
-    <p class="mt-4 font-bold text-green-800">جاري معالجة البيانات...</p>
-</div>
+    /* الهيدر الرئيسي للموقع */
+    .header {
+      background: rgba(55, 151, 119, 0.85); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3); color: white;
+      padding: 25px; border-radius: 20px; margin-bottom: 25px;
+      box-shadow: 0 8px 32px rgba(55, 151, 119, 0.3); text-align: center;
+    }
+    .header h1 { margin: 0 0 10px 0; font-size: 36px; font-weight: 700; }
 
-<div class="container">
-    <div class="official-header">
-        <div class="official-title">المحكمة الجزائية بمحافظة جدة</div>
-        <div class="text-lg font-bold">إدارة الدعاوى والأحكام</div>
-        <div class="text-md font-bold">قسم خدمات المستفيدين</div>
+    /* أزرار التنقل */
+    .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; justify-content: center; }
+    .nav-tab {
+      background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 17px; font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .nav-tab:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
+    .nav-tab.active {
+      background: rgba(255, 255, 255, 0.95); color: #379777; border: 2px solid #f4ce14;
+      box-shadow: 0 8px 25px rgba(244, 206, 20, 0.3);
+    }
+
+    /* الصفحات */
+    .page { display: none; animation: fadeIn 0.4s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* البطاقات والعناصر */
+    .card {
+      background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 20px;
+      padding: 25px; margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; color: #45474b; font-weight: 700; font-size: 16px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 12px 15px; border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 12px; font-size: 16px; background: rgba(255, 255, 255, 0.6);
+    }
+    .btn {
+      padding: 14px 28px; border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer;
+      transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: rgba(55, 151, 119, 0.85); color: white; }
+    .btn-primary:hover { background: rgba(45, 122, 95, 0.95); transform: translateY(-3px); }
+    .btn-secondary { background: rgba(244, 206, 20, 0.85); color: #45474b; }
+    
+    /* الجداول */
+    table { width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.6); border-radius: 15px; overflow: hidden; }
+    thead { background: rgba(55, 151, 119, 0.85); color: white; }
+    th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid rgba(255, 255, 255, 0.3); }
+    
+    /* شاشة التحميل */
+    .loading-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255,255,255,0.9); z-index: 9999;
+        display: none; flex-direction: column; justify-content: center; align-items: center;
+    }
+    .spinner {
+        width: 50px; height: 50px; border: 5px solid #f3f3f3;
+        border-top: 5px solid #379777; border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* إحصائيات */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .stat-card { padding: 30px; border-radius: 20px; color: white; text-align: center; }
+    .stat-card-1 { background: rgba(55, 151, 119, 0.85); }
+    .stat-card-2 { background: rgba(244, 206, 20, 0.85); color: #45474b; }
+    .stat-card-3 { background: #45474b; }
+    .stat-icon { font-size: 40px; margin-bottom: 10px; }
+    .stat-number { font-size: 36px; font-weight: bold; }
+
+    /* الطباعة */
+    @media print {
+        .no-print { display: none !important; }
+        body { background: white; }
+        .card { box-shadow: none; border: 1px solid #ddd; }
+    }
+  </style>
+ </head>
+ <body>
+
+  <div id="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <h3 style="margin-top: 20px; color: #379777; font-size: 20px;">جاري الاتصال بقاعدة البيانات...</h3>
+  </div>
+
+  <div class="container">
+   <div class="official-header">
+    <div class="official-title">المحكمة الجزائية بمحافظة جدة</div>
+    <div class="official-subtitle">إدارة الدعاوى والأحكام</div>
+    <div class="official-department">قسم خدمات المستفيدين</div>
+   </div>
+
+   <div class="header">
+    <h1 id="site-title">نظام إحصائيات خدمات المستفيدين</h1>
+    <div class="nav-tabs no-print">
+        <button class="nav-tab active" onclick="switchPage('charts', this)">📊 الإحصائيات</button>
+        <button class="nav-tab" onclick="switchPage('comprehensive', this)">📈 تقرير شامل</button>
+        <button class="nav-tab" onclick="switchPage('data', this)">📋 سجل البيانات</button>
+        <button class="nav-tab" onclick="switchPage('entry', this)">➕ إدخال بيانات</button>
+        <button class="nav-tab" onclick="switchPage('info', this)">ℹ️ مساعدة</button>
     </div>
+   </div>
 
-    <div class="header">
-        <h1>إحصائيات خدمات المستفيدين</h1>
-        <div class="nav-tabs no-print">
-            <button class="nav-tab active" onclick="switchPage('charts', this)">📊 الإحصائيات</button>
-            <button class="nav-tab" onclick="switchPage('data', this)">📋 سجل البيانات</button>
-            <button class="nav-tab" onclick="switchPage('entry', this)">➕ إدخال بيانات</button>
+   <div id="page-charts" class="page active">
+    <div class="stats-grid mb-6">
+        <div class="stat-card stat-card-1">
+            <div class="stat-icon">📋</div>
+            <h3>إجمالي السجلات</h3>
+            <div class="stat-number" id="total-records">0</div>
+        </div>
+        <div class="stat-card stat-card-2">
+            <div class="stat-icon">🏛️</div>
+            <h3>أكثر دائرة</h3>
+            <div class="stat-number" id="top-dept" style="font-size: 24px">-</div>
+        </div>
+        <div class="stat-card stat-card-3">
+            <div class="stat-icon">🔄</div>
+            <h3>أكثر سبب</h3>
+            <div class="stat-number" id="top-reason" style="font-size: 20px">-</div>
         </div>
     </div>
 
-    <div id="page-charts" class="page active">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="stat-card" style="background: #379777;">
-                <div class="text-4xl mb-2">📋</div>
-                <div class="text-sm">إجمالي السجلات</div>
-                <div id="stat-total" class="text-3xl font-bold">0</div>
-            </div>
-            <div class="stat-card" style="background: #f4ce14; color: #45474b;">
-                <div class="text-4xl mb-2">🏛️</div>
-                <div class="text-sm">أكثر دائرة</div>
-                <div id="stat-dept" class="text-xl font-bold">-</div>
-            </div>
-            <div class="stat-card" style="background: #45474b;">
-                <div class="text-4xl mb-2">🔄</div>
-                <div class="text-sm">أكثر سبب</div>
-                <div id="stat-reason" class="text-lg font-bold">-</div>
-            </div>
-            <div class="stat-card" style="background: #379777;">
-                <div class="text-4xl mb-2">🎯</div>
-                <div class="text-sm">أكثر صفة</div>
-                <div id="stat-capacity" class="text-xl font-bold">-</div>
-            </div>
+    <div class="card mb-6">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn btn-secondary btn-small" onclick="filterCharts('today')">📅 اليوم</button>
+            <button class="btn btn-secondary btn-small" onclick="filterCharts('all')">🔄 الكل</button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="card"><canvas id="chart-dept"></canvas></div>
-            <div class="card"><canvas id="chart-cap"></canvas></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+            <div style="height: 300px;"><canvas id="deptChart"></canvas></div>
+            <div style="height: 300px;"><canvas id="capChart"></canvas></div>
         </div>
     </div>
+   </div>
 
-    <div id="page-data" class="page">
-        <div class="card overflow-x-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-green-800">📋 سجل البيانات التفصيلي</h2>
-                <button onclick="fetchData()" class="btn btn-primary text-xs">🔄 تحديث</button>
-            </div>
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>التاريخ</th>
-                        <th>المستفيد</th>
-                        <th>الدائرة</th>
-                        <th>الصفة</th>
-                        <th>السبب</th>
-                        <th>الموظف</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+   <div id="page-comprehensive" class="page">
+       <div class="card">
+           <h2 style="color: #379777; margin-bottom: 20px;">📊 تحليل أداء الموظفين</h2>
+           <div style="height: 400px;"><canvas id="empChart"></canvas></div>
+       </div>
+       <div class="card">
+           <h2 style="color: #379777; margin-bottom: 20px;">📝 تفاصيل أسباب الزيارة</h2>
+           <div id="reasons-list"></div>
+       </div>
+   </div>
+
+   <div id="page-data" class="page">
+    <div class="card overflow-x-auto">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #379777; font-size: 24px;">سجل البيانات التفصيلي</h2>
+            <button class="btn btn-primary" onclick="fetchData()">🔄 تحديث البيانات</button>
         </div>
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>المستفيد</th>
+                    <th>الدائرة</th>
+                    <th>الصفة</th>
+                    <th>سبب الزيارة</th>
+                    <th>الموظف</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+   </div>
+
+   <div id="page-entry" class="page">
+    <div class="login-container" id="login-form">
+     <h2>🔒 تسجيل الدخول</h2>
+     <div class="error-message" id="login-error">كلمة المرور غير صحيحة</div>
+     <form onsubmit="checkLogin(event)">
+      <div class="form-group">
+          <label>كلمة المرور</label>
+          <input type="password" id="password-input" placeholder="****">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">دخول</button>
+     </form>
     </div>
 
-    <div id="page-entry" class="page">
-        <div class="card max-w-4xl mx-auto">
-            <h2 class="text-2xl font-bold text-green-700 mb-6 border-b pb-2">📝 تسجيل معاملة جديدة</h2>
-            <form id="entryForm">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-group"><label>اليوم *</label><select id="f-day" required><option value="">اختر</option><option>الأحد</option><option>الاثنين</option><option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option></select></div>
-                    <div class="form-group"><label>التاريخ *</label><input type="date" id="f-date" required></div>
-                    <div class="form-group"><label>اسم المستفيد</label><input type="text" id="f-name"></div>
-                    <div class="form-group"><label>رقم الهوية</label><input type="text" id="f-id"></div>
-                    <div class="form-group"><label>رقم القضية</label><input type="text" id="f-case"></div>
-                    <div class="form-group"><label>الدائرة *</label><select id="f-dept" required><option value="">اختر</option><option>الدائرة الأولى</option><option>الدائرة الثانية</option><option>الدائرة الثالثة</option><option>الدائرة الرابعة</option><option>الدائرة الخامسة</option><option>دائرة الأحداث</option><option>غير مقيد</option></select></div>
-                    <div class="form-group"><label>الصفة *</label><select id="f-cap" required><option value="">اختر</option><option>أصيل مدعي</option><option>أصيل مدعى عليه</option><option>وكيل</option><option>محامي</option><option>شاهد</option></select></div>
-                    <div class="form-group"><label>الموظف المختص *</label><select id="f-emp" required><option value="">اختر</option><option>علي الغامدي</option><option>محمد الثبيتي</option><option>فيصل الجهني</option><option>متعب الصاعدي</option><option>أكرم الصبحي</option><option>حميد السلمي</option></select></div>
-                    <div class="form-group md:col-span-2"><label>سبب الزيارة *</label><select id="f-reason" required><option value="">اختر</option><option>طلب الاطلاع على ملف القضية</option><option>تقديم شكوى لمكتب فضيلة رئيس المحكمة</option><option>طلب صورة من صك الحكم</option><option>الاستعلام عن معاملة</option><option>طلب رابط جلسة</option></select></div>
-                </div>
-                <button type="submit" class="btn btn-primary w-full py-4 text-xl justify-center mt-4">💾 حفظ في قاعدة البيانات</button>
-            </form>
-        </div>
+    <div id="entry-form-container" style="display: none;">
+     <div class="card">
+      <h2 style="color: #379777; margin-bottom: 25px; font-size: 26px;">📝 إدخال بيانات جديدة</h2>
+      <form id="data-entry-form" onsubmit="submitForm(event)">
+       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div class="form-group"><label>اليوم *</label> <select id="day" required> <option value="">اختر اليوم</option> <option>الأحد</option> <option>الاثنين</option> <option>الثلاثاء</option> <option>الأربعاء</option> <option>الخميس</option> </select> </div>
+        <div class="form-group"><label>التاريخ *</label> <input type="date" id="date" required> </div>
+        <div class="form-group"><label>اسم المستفيد</label> <input type="text" id="beneficiary-name" placeholder="أدخل اسم المستفيد"> </div>
+        <div class="form-group"><label>رقم الهوية</label> <input type="text" id="id-number" placeholder="أدخل رقم الهوية"> </div>
+        <div class="form-group"><label>رقم الجوال</label> <input type="tel" id="phone-number" placeholder="05xxxxxxxx"> </div>
+        <div class="form-group"><label>رقم القضية</label> <input type="text" id="case-number" placeholder="أدخل رقم القضية"> </div>
+        <div class="form-group"><label>الدائرة *</label> <select id="department" required> <option value="">اختر الدائرة</option> <option>الدائرة الأولى</option> <option>الدائرة الثانية</option> <option>الدائرة الثالثة</option> <option>الدائرة الرابعة</option> <option>الدائرة الخامسة</option> <option>الدائرة السادسة</option> <option>الدائرة السابعة</option> <option>دائرة الأحداث</option> <option>غير مقيد</option> </select> </div>
+        <div class="form-group"><label>الصفة *</label> <select id="capacity" required> <option value="">اختر الصفة</option> <option>أصيل مدعي</option> <option>أصيل مدعى عليه</option> <option>وكيل مدعي</option> <option>وكيل مدعى عليه</option> <option>محامي</option> <option>شاهد</option> </select> </div>
+        <div class="form-group" style="grid-column: 1/-1"><label>سبب الزيارة *</label> <select id="description" required> <option value="">اختر الوصف</option> <option>طلب الاطلاع على ملف القضية</option> <option>تقديم شكوى لمكتب فضيلة رئيس المحكمة</option> <option>طلب صورة من صك الحكم (غير مرفق في المنصة التقنية)</option> <option>الاستعلام عن (رقم القضية/ رقم الصك) بالحق العام لرفع الحق الخاص</option> <option>الاستعلام عن رقم معاملة صادرة</option> <option>الاستعلام عن موعد الجلسة (لا تظهر في المنصة التقنية)</option> <option>الاستعلام عن معاملة محالة من النيابة العامة</option> <option>تسليم بينة (مقطع مرئي/ صوتي - صور)</option> <option>طلب تعديل حالة القضية إلى (قيد النظر) للتمكن من تقديم الطلبات عبر المنصة التقنية</option> <option>طلب حضور جلسة لعدم وجود حساب (أبشر)</option> <option>طلب رابط حضور جلسة مرئية ( شاهد عام )</option> <option>طلب اعتماد صك الحكم ( تجاوز مدة الاعتماد )</option> <option>الاستعلام عن حالة تبليغ الحكم</option> <option>طلب رفع قرارات ( التبليغ بالمراجعة / أمر قبض )</option> <option>طلب حضور جلسة ( موقوف في مراكز الشرط )</option> </select> </div>
+        <div class="form-group" style="grid-column: 1/-1"><label>الموظف المختص *</label> <select id="employee" required> <option value="">اختر الموظف</option> <option>علي الغامدي</option> <option>محمد الثبيتي</option> <option>فيصل الجهني</option> <option>متعب الصاعدي</option> <option>أكرم الصبحي</option> <option>حميد السلمي</option> <option>هتان المطيري</option> <option>فهاد عسيري</option> <option>خالد عريبي</option> <option>مانع السلمي</option> </select> </div>
+       </div>
+       <div style="margin-top: 30px; display: flex; gap: 15px;">
+           <button type="submit" class="btn btn-primary" id="submit-btn">💾 حفظ البيانات في النظام</button> 
+           <button type="reset" class="btn btn-secondary">🔄 مسح النموذج</button>
+       </div>
+      </form>
+     </div>
     </div>
+   </div>
 
-    <footer class="site-footer mt-10">
-        <p>جميع الحقوق محفوظة © 2024 - شرف عبدالله المالكي</p>
-    </footer>
-</div>
+   <div id="page-info" class="page">
+       <div class="card">
+           <h2 style="color: #379777;">ℹ️ معلومات النظام</h2>
+           <p>هذا النظام متصل مباشرة بقاعدة بيانات Google Sheets.</p>
+           <p>جميع البيانات المدخلة يتم حفظها تلقائياً في الرابط التالي:</p>
+           <a href="https://docs.google.com/spreadsheets" target="_blank" class="btn btn-secondary mt-4">🔗 فتح جدول البيانات (Google Sheet)</a>
+       </div>
+       <div class="card" style="border: 1px solid #dc3545;">
+           <h3 style="color: #dc3545;">🗑️ تنبيه حول حذف البيانات</h3>
+           <p>لحماية البيانات من الحذف الخطأ، لا يمكن حذف السجلات نهائياً من هذه الواجهة.</p>
+           <p>لحذف سجل، يرجى الدخول إلى ملف Google Sheet وحذف الصف الخاص به يدوياً.</p>
+       </div>
+   </div>
 
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjGFsxXiOdz9iEvV2YCgXAqm1_r2T7CO5sW0JwgEkFi0TOKK3Lp_Y491VQ4Q0NAMUAxQ/exec";
+   <footer class="site-footer">
+    <p>جميع الحقوق محفوظة © 2024 - قسم خدمات المستفيدين</p>
+    <p style="font-size: 14px; opacity: 0.8;">تصميم وتطوير: شرف عبدالله المالكي</p>
+   </footer>
+  </div>
+
+  <script>
+    // -----------------------------------------------------------
+    // إعدادات الربط مع Google Apps Script
+    // -----------------------------------------------------------
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjGFsxXiOdz9iEvV2YCgXAqm1_r2T7CO5sW0JwgEkFi0TOKK3Lp_Y491VQ4Q0NAMUAxQ/exec";
+    
     let allData = [];
     let charts = {};
 
-    // 1. التنقل بين الصفحات
-    function switchPage(pageId, btn) {
+    // التنقل بين الصفحات
+    function switchPage(pageId, btnElement) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        
         document.getElementById('page-' + pageId).classList.add('active');
-        btn.classList.add('active');
-        if(pageId === 'charts') updateDashboard();
-    }
+        btnElement.classList.add('active');
 
-    // 2. جلب البيانات من جوجل
-    async function fetchData() {
-        toggleLoading(true);
-        try {
-            const res = await fetch(SCRIPT_URL);
-            allData = await res.json();
-            renderTable();
+        if(pageId === 'charts' || pageId === 'comprehensive') {
             updateDashboard();
-        } catch (e) { console.error("Error fetching data:", e); }
-        toggleLoading(false);
+        }
     }
 
-    // 3. إرسال البيانات لجوجل
-    document.getElementById('entryForm').onsubmit = async (e) => {
+    // تسجيل الدخول
+    function checkLogin(e) {
         e.preventDefault();
-        toggleLoading(true);
+        const pass = document.getElementById('password-input').value;
+        if(pass === "1234") {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('entry-form-container').style.display = 'block';
+        } else {
+            document.getElementById('login-error').style.display = 'block';
+        }
+    }
 
-        const record = {
-            day: document.getElementById('f-day').value,
-            date: document.getElementById('f-date').value,
-            beneficiary_name: document.getElementById('f-name').value,
-            id_number: document.getElementById('f-id').value,
-            case_number: document.getElementById('f-case').value,
-            department: document.getElementById('f-dept').value,
-            capacity: document.getElementById('f-cap').value,
-            description: document.getElementById('f-reason').value,
-            employee: document.getElementById('f-emp').value,
+    // دالة جلب البيانات من قوقل
+    async function fetchData() {
+        showLoading(true);
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL);
+            const data = await response.json();
+            allData = data;
+            renderTable(allData);
+            updateDashboard();
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            alert("حدث خطأ أثناء جلب البيانات، تأكد من الاتصال بالإنترنت.");
+        }
+        showLoading(false);
+    }
+
+    // دالة إرسال البيانات (Submit)
+    async function submitForm(e) {
+        e.preventDefault();
+        showLoading(true);
+
+        const btn = document.getElementById('submit-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "جاري الحفظ...";
+        btn.disabled = true;
+
+        const formData = {
+            day: document.getElementById('day').value,
+            date: document.getElementById('date').value,
+            beneficiary_name: document.getElementById('beneficiary-name').value,
+            id_number: document.getElementById('id-number').value,
+            phone_number: document.getElementById('phone_number').value,
+            case_number: document.getElementById('case-number').value,
+            department: document.getElementById('department').value,
+            capacity: document.getElementById('capacity').value,
+            description: document.getElementById('description').value,
+            employee: document.getElementById('employee').value,
             created_at: new Date().toISOString()
         };
 
         try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', // لتجاوز مشاكل CORS مع Google Apps Script
-                body: JSON.stringify(record)
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // ضروري لتجاوز قيود المتصفح مع سكريبت قوقل
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
             });
-            alert("✅ تم الحفظ بنجاح!");
-            document.getElementById('entryForm').reset();
-            fetchData(); // تحديث محلي
-        } catch (err) { alert("❌ حدث خطأ في الاتصال"); }
-        toggleLoading(false);
-    };
 
-    // 4. تحديث الجدول
-    function renderTable() {
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = allData.slice().reverse().map(r => `
+            alert("✅ تم حفظ البيانات بنجاح!");
+            document.getElementById('data-entry-form').reset();
+            fetchData(); // تحديث البيانات محلياً
+        } catch (error) {
+            console.error("Error submitting:", error);
+            alert("❌ حدث خطأ أثناء الحفظ");
+        }
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showLoading(false);
+    }
+
+    // تعبئة الجدول
+    function renderTable(data) {
+        const tbody = document.querySelector('#mainTable tbody');
+        if(data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">لا توجد بيانات</td></tr>';
+            return;
+        }
+        // عرض آخر البيانات أولاً (Reverse)
+        tbody.innerHTML = data.slice().reverse().map(row => `
             <tr>
-                <td>${r.date}</td>
-                <td>${r.beneficiary_name || '-'}</td>
-                <td>${r.department}</td>
-                <td>${r.capacity}</td>
-                <td>${r.description}</td>
-                <td>${r.employee}</td>
+                <td>${row.date}</td>
+                <td>${row.beneficiary_name || '-'}</td>
+                <td>${row.department}</td>
+                <td>${row.capacity}</td>
+                <td>${row.description}</td>
+                <td>${row.employee}</td>
             </tr>
         `).join('');
     }
 
-    // 5. تحديث الإحصائيات والرسوم
+    // تحديث لوحة التحكم والرسوم
     function updateDashboard() {
         if(allData.length === 0) return;
 
-        document.getElementById('stat-total').innerText = allData.length;
+        // حساب التكرارات
+        const counts = { dept: {}, cap: {}, reason: {}, emp: {} };
         
-        const counts = { dept: {}, cap: {}, reason: {} };
-        allData.forEach(r => {
-            counts.dept[r.department] = (counts.dept[r.department] || 0) + 1;
-            counts.cap[r.capacity] = (counts.cap[r.capacity] || 0) + 1;
-            counts.reason[r.description] = (counts.reason[r.description] || 0) + 1;
+        allData.forEach(row => {
+            counts.dept[row.department] = (counts.dept[row.department] || 0) + 1;
+            counts.cap[row.capacity] = (counts.cap[row.capacity] || 0) + 1;
+            counts.reason[row.description] = (counts.reason[row.description] || 0) + 1;
+            counts.emp[row.employee] = (counts.emp[row.employee] || 0) + 1;
         });
 
-        const top = (obj) => Object.entries(obj).sort((a,b)=>b[1]-a[1])[0][0];
-        document.getElementById('stat-dept').innerText = top(counts.dept);
-        document.getElementById('stat-capacity').innerText = top(counts.cap);
-        document.getElementById('stat-reason').innerText = top(counts.reason);
+        // تحديث الكروت العلوية
+        document.getElementById('total-records').innerText = allData.length;
+        document.getElementById('top-dept').innerText = getTopKey(counts.dept);
+        document.getElementById('top-reason').innerText = getTopKey(counts.reason);
 
-        initChart('chart-dept', 'توزيع الدوائر', counts.dept, 'bar');
-        initChart('chart-cap', 'توزيع الصفات', counts.cap, 'pie');
+        // رسم الشارتات
+        renderChart('deptChart', 'bar', 'توزيع الدوائر', counts.dept);
+        renderChart('capChart', 'doughnut', 'توزيع الصفات', counts.cap);
+        renderChart('empChart', 'bar', 'أداء الموظفين', counts.emp);
     }
 
-    function initChart(canvasId, label, dataObj, type) {
-        if(charts[canvasId]) charts[canvasId].destroy();
-        charts[canvasId] = new Chart(document.getElementById(canvasId), {
+    function getTopKey(obj) {
+        const entries = Object.entries(obj);
+        if(entries.length === 0) return '-';
+        return entries.sort((a,b) => b[1] - a[1])[0][0];
+    }
+
+    function renderChart(canvasId, type, label, dataObj) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        
+        // تدمير الشارت القديم إذا وجد
+        if(charts[canvasId]) {
+            charts[canvasId].destroy();
+        }
+
+        charts[canvasId] = new Chart(ctx, {
             type: type,
             data: {
                 labels: Object.keys(dataObj),
                 datasets: [{
                     label: label,
                     data: Object.values(dataObj),
-                    backgroundColor: ['#379777', '#f4ce14', '#45474b', '#2d7a5f', '#e0bc00']
+                    backgroundColor: [
+                        '#379777', '#f4ce14', '#45474b', '#2d7a5f', '#e0bc00', '#1f2937'
+                    ],
+                    borderWidth: 1
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
         });
     }
 
-    function toggleLoading(show) {
+    function showLoading(show) {
         document.getElementById('loading').style.display = show ? 'flex' : 'none';
     }
 
-    // تشغيل التطبيق
-    window.onload = fetchData;
-</script>
-</body>
+    // تصفية الشارتات (مثال بسيط)
+    function filterCharts(period) {
+        if(period === 'all') {
+            updateDashboard(); // إعادة رسم الكل
+        } else if (period === 'today') {
+            // هنا يمكن إضافة منطق فلترة حسب التاريخ
+            alert("سيتم تفعيل فلتر التاريخ قريباً");
+        }
+    }
+
+    // التشغيل التلقائي عند فتح الصفحة
+    window.onload = function() {
+        // تعيين تاريخ اليوم تلقائياً في حقل الإدخال
+        document.getElementById('date').valueAsDate = new Date();
+        fetchData();
+    };
+  </script>
+ </body>
 </html>
