@@ -171,6 +171,7 @@ function setupLogin() {
             } else {
                 showError(result.error || 'خطأ في تسجيل الدخول');
             }
+        } catch (err) {
             console.error(err);
             showError('حدث خطأ في الاتصال بالخادم');
         }
