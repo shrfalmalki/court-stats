@@ -7,10 +7,16 @@ let allData = [];
 let charts = {};
 
 function initializeApp() {
-    setupNavigation();
-    setupLogin();
-    setupForms();
-    checkLoginStatus();
+    console.log("App Initializing...");
+    try {
+        setupNavigation();
+        setupLogin();
+        setupForms();
+        checkLoginStatus();
+    } catch (e) {
+        console.error("Init Error:", e);
+        showLoginScreen();
+    }
 }
 
 // --- Navigation ---
