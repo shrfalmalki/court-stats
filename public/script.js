@@ -179,37 +179,60 @@ function setupLogin() {
 
     // Recovery Modal Logic
     const recoveryModal = document.getElementById('recovery-modal');
-    document.getElementById('forgot-password-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        recoveryModal.style.display = 'flex';
-    });
+    const forgotLink = document.getElementById('forgot-password-link');
 
-    document.getElementById('cancel-reset-btn').addEventListener('click', () => {
-        recoveryModal.style.display = 'none';
-    });
+    if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log("Opening Recovery Modal");
+            recoveryModal.style.display = 'flex';
+        });
+    }
 
-    document.getElementById('confirm-reset-btn').addEventListener('click', async () => {
-        const key = document.getElementById('recovery-key').value;
-        if (!key) return alert("أدخل المفتاح");
+    const cancelBtn = document.getElementById('cancel-reset-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent accidental form submit
+            recoveryModal.style.display = 'none';
+        });
+    }
 
-        try {
-            const res = await fetch(`${API_BASE}/admin/reset-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ recoveryKey: key })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                alert(data.message);
-                recoveryModal.style.display = 'none';
-                document.getElementById('recovery-key').value = '';
-            } else {
-                alert(data.error);
+    const confirmBtn = document.getElementById('confirm-reset-btn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async (e) => {
+            e.preventDefault(); // Prevent accidental form submit
+            const key = document.getElementById('recovery-key').value;
+            if (!key) return alert("الرجاء إدخال مفتاح الطوارئ");
+
+            confirmBtn.innerText = "جاري التحقق...";
+            confirmBtn.disabled = true;
+
+            try {
+                console.log(`Sending recovery request to ${API_BASE}/admin/reset-password`);
+                const res = await fetch(`${API_BASE}/admin/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recoveryKey: key })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(data.message || "تمت إعادة تعيين كلمة المرور بنجاح");
+                    recoveryModal.style.display = 'none';
+                    document.getElementById('recovery-key').value = '';
+                } else {
+                    alert(data.error || "خطأ أثناء إعادة التعيين");
+                }
+            } catch (e) {
+                console.error("Recovery Error:", e);
+                alert("حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.");
+            } finally {
+                confirmBtn.innerText = "تأكيد";
+                confirmBtn.disabled = false;
             }
-        } catch (e) {
-            alert("خطأ في الاتصال");
-        }
-    });
+        });
+    }
 }
 
 function showError(msg) {
