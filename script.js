@@ -1,636 +1,384 @@
-document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-});
+// عنوان API
+const API_URL = 'http://localhost:3000/api';
 
-const API_BASE = '/api';
-let allData = [];
-let charts = {};
-
-function initializeApp() {
-    console.log("App Initializing...");
-    try {
-        setupNavigation();
-        setupLogin();
-        setupForms();
-        checkLoginStatus();
-    } catch (e) {
-        console.error("Init Error:", e);
-        showLoginScreen();
+// التحقق من تسجيل الدخول عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // إذا كان المستخدم مسجل دخول بالفعل، توجيهه للصفحة المناسبة
+    const currentUser = getCurrentUser();
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
+    if (currentUser && currentPage === 'index.html') {
+        redirectToHomePage(currentUser.role);
+        return;
     }
-}
-
-// --- Navigation ---
-function setupNavigation() {
-    const navLinks = document.querySelectorAll('.nav-tab');
-    const pages = document.querySelectorAll('.page');
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const pageId = link.getAttribute('data-page');
-
-            // Check auth
-            if (!isLoggedIn()) {
-                showLoginScreen();
-                return;
-            }
-
-            // Simple role check for admin tab
-            if (pageId === 'admin' && localStorage.getItem('role') !== 'admin') {
-                alert('عفواً، هذه الصفحة خاصة بالمدير فقط');
-                return;
-            }
-
-            // Switch Tab
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-
-            // Switch Page
-            pages.forEach(p => p.classList.remove('active'));
-            document.getElementById(`page-${pageId}`).classList.add('active');
-
-            // Load Page Data
-            loadPageData(pageId);
-        });
-    });
-
-    // Logout
-    const logoutBtn = document.getElementById('logout-btn');
+    
+    // إذا كانت الصفحة تتطلب تسجيل دخول
+    if (currentPage !== 'index.html' && !currentUser) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // معالج نموذج تسجيل الدخول
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    // معالج زر تسجيل الخروج
+    const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('user');
-            localStorage.removeItem('role');
-            localStorage.removeItem('user_id');
-            document.getElementById('user-dashboard').style.display = 'none';
-            showLoginScreen();
-        });
+        logoutBtn.addEventListener('click', handleLogout);
     }
-}
-
-function loadPageData(pageId) {
-    if (pageId === 'charts') reloadDataAndCharts();
-    if (pageId === 'data') updateDataTable();
-    if (pageId === 'simple') updateSimpleTable();
-    if (pageId === 'admin') loadAdminData();
-    if (pageId === 'comprehensive') updateComprehensiveStats();
-    if (pageId === 'entry') loadEntryFormData();
-}
-
-// --- Authentication ---
-function isLoggedIn() {
-    return !!localStorage.getItem('user');
-}
-
-function checkLoginStatus() {
-    if (isLoggedIn()) {
-        const user = localStorage.getItem('user');
-        const role = localStorage.getItem('role');
-
-        // Fix: Show proper name for admin
-        const displayName = role === 'admin' ? 'المدير' : user;
-        document.getElementById('header-user-name').textContent = displayName;
-        document.getElementById('user-dashboard').style.display = 'flex';
-
-        document.getElementById('main-login-screen').style.display = 'none';
-
-        // Show default page (charts)
-        document.querySelector('.nav-tab[data-page="charts"]').click();
-
-        // Load employees for login dropdown (in case of logout)
-        loadEmployeesIntoSelect('login-employees-list-optgroup', true);
-    } else {
-        showLoginScreen();
-    }
-}
-
-function showLoginScreen() {
-    document.getElementById('main-login-screen').style.display = 'flex';
-    loadEmployeesIntoSelect('login-employees-list-optgroup', true);
-}
-
-function setupLogin() {
-    const form = document.getElementById('main-login-form');
-    const typeSelect = document.getElementById('login-type');
-    const passwordInput = document.getElementById('login-password');
-    const errorMsg = document.getElementById('main-login-error');
-
-    // Clear error on input
-    passwordInput.addEventListener('input', () => errorMsg.style.display = 'none');
-    typeSelect.addEventListener('change', () => {
-        errorMsg.style.display = 'none';
-        const val = typeSelect.value;
-        const display = document.getElementById('login-username-display');
-        if (val === 'admin') display.value = 'admin';
-        else display.value = val;
-    });
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const type = typeSelect.value;
-        const password = passwordInput.value;
-
-        if (!type || !password) {
-            showError('الرجاء اختيار الحساب وإدخال كلمة المرور');
-            return;
-        }
-
-        const username = type === 'admin' ? 'admin' : type;
-        const role = type === 'admin' ? 'admin' : 'employee';
-
-        try {
-            const response = await fetch(`${API_BASE}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role })
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                localStorage.setItem('user', result.user);
-                localStorage.setItem('role', result.role);
-                if (result.id) localStorage.setItem('user_id', result.id);
-
-                // Set UI state
-                document.getElementById('main-login-screen').style.display = 'none';
-
-                // Update Header User Name
-                const displayName = result.role === 'admin' ? 'المدير' : result.user;
-                document.getElementById('header-user-name').textContent = displayName;
-                document.getElementById('user-dashboard').style.display = 'flex';
-
-                // Prepare Entry Page
-                if (result.role === 'employee') {
-                    document.getElementById('current-employee-name').textContent = result.user;
-                    document.getElementById('employee').value = result.user;
-                }
-
-                form.reset();
-                document.querySelector('.nav-tab[data-page="charts"]').click();
-            } else {
-                showError(result.error || 'خطأ في تسجيل الدخول');
-            }
-        } catch (err) {
-            console.error(err);
-            showError('حدث خطأ في الاتصال بالخادم');
-        }
-    });
-
-    // Recovery Modal Logic
-    const recoveryModal = document.getElementById('recovery-modal');
-    const forgotLink = document.getElementById('forgot-password-link');
-
-    if (forgotLink) {
-        forgotLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log("Opening Recovery Modal");
-            recoveryModal.style.display = 'flex';
-        });
-    }
-
-    const cancelBtn = document.getElementById('cancel-reset-btn');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent accidental form submit
-            recoveryModal.style.display = 'none';
-        });
-    }
-
-    const confirmBtn = document.getElementById('confirm-reset-btn');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', async (e) => {
-            e.preventDefault(); // Prevent accidental form submit
-            const key = document.getElementById('recovery-key').value;
-            if (!key) return alert("الرجاء إدخال مفتاح الطوارئ");
-
-            confirmBtn.innerText = "جاري التحقق...";
-            confirmBtn.disabled = true;
-
-            try {
-                console.log(`Sending recovery request to ${API_BASE}/admin/reset-password`);
-                const res = await fetch(`${API_BASE}/admin/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recoveryKey: key })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    alert(data.message || "تمت إعادة تعيين كلمة المرور بنجاح");
-                    recoveryModal.style.display = 'none';
-                    document.getElementById('recovery-key').value = '';
-                } else {
-                    alert(data.error || "خطأ أثناء إعادة التعيين");
-                }
-            } catch (e) {
-                console.error("Recovery Error:", e);
-                alert("حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.");
-            } finally {
-                confirmBtn.innerText = "تأكيد";
-                confirmBtn.disabled = false;
-            }
-        });
-    }
-}
-
-function showError(msg) {
-    const errorEl = document.getElementById('main-login-error');
-    errorEl.textContent = msg;
-    errorEl.style.display = 'block';
-    // Trigger Css Animation
-    errorEl.style.animation = 'none';
-    errorEl.offsetHeight; /* trigger reflow */
-    errorEl.style.animation = null;
-}
-
-// --- Forms & Data ---
-function setupForms() {
-    // Data Entry Form
-    const entryForm = document.getElementById('data-entry-form');
-    entryForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('submit-btn');
-        const btnText = document.getElementById('submit-btn-text');
-
-        btn.disabled = true;
-        btnText.textContent = 'جاري الحفظ...';
-
-        const formData = {
-            day: document.getElementById('day').value,
-            date: document.getElementById('date').value,
-            beneficiary_name: document.getElementById('beneficiary-name').value,
-            id_number: document.getElementById('id-number').value,
-            phone_number: document.getElementById('phone-number').value,
-            case_number: document.getElementById('case-number').value,
-            department: document.getElementById('department').value,
-            capacity: document.getElementById('capacity').value,
-            description: document.getElementById('description').value,
-            employee: document.getElementById('employee').value // Hidden field
-        };
-
-        try {
-            const res = await fetch(`${API_BASE}/records`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-            const data = await res.json();
-
-            const successMsg = document.getElementById('entry-success');
-            if (res.ok) {
-                successMsg.textContent = '✅ تم حفظ البيانات بنجاح!';
-                successMsg.style.display = 'block';
-                entryForm.reset();
-                // Restore employee name if employee
-                if (localStorage.getItem('role') === 'employee') {
-                    document.getElementById('employee').value = localStorage.getItem('user');
-                }
-                setTimeout(() => successMsg.style.display = 'none', 3000);
-            } else {
-                alert('خطأ: ' + (data.error || 'فشل الحفظ'));
-            }
-        } catch (err) {
-            alert('خطأ في الاتصال');
-        } finally {
-            btn.disabled = false;
-            btnText.textContent = '💾 حفظ البيانات';
-        }
-    });
-
-    // Add Item Listeners (Admin)
-    setupAdminAddListener('add-employee-btn', 'new-employee-name', 'employees');
-    setupAdminAddListener('add-department-btn', 'new-department-name', 'departments');
-    setupAdminAddListener('add-capacity-btn', 'new-capacity-name', 'capacities');
-    setupAdminAddListener('add-description-btn', 'new-description-name', 'descriptions');
-
-    // Password Change
-    document.getElementById('change-password-btn').addEventListener('click', async () => {
-        const username = document.getElementById('password-user-select').value;
-        const oldPassword = document.getElementById('current-password').value;
-        const newPassword = document.getElementById('new-password').value;
-        const msg = document.getElementById('password-message');
-
-        if (!username || !oldPassword || !newPassword) {
-            msg.textContent = 'الرجاء تعبئة جميع الحقول';
-            msg.style.color = 'red';
-            return;
-        }
-
-        const role = username === 'admin' ? 'admin' : 'employee';
-
-        try {
-            const res = await fetch(`${API_BASE}/change-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, oldPassword, newPassword, role })
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                msg.textContent = 'تم التغيير بنجاح';
-                msg.style.color = 'green';
-                document.getElementById('current-password').value = '';
-                document.getElementById('new-password').value = '';
-            } else {
-                msg.textContent = data.error || 'فشل التغيير';
-                msg.style.color = 'red';
-            }
-        } catch (err) {
-            msg.textContent = 'خطأ في الاتصال';
-            msg.style.color = 'red';
-        }
-    });
-
-    // Self-Service Password Change (Info Page)
-    const changeOwnBtn = document.getElementById('change-own-password-btn');
-    if (changeOwnBtn) {
-        changeOwnBtn.addEventListener('click', async () => {
-            const oldPassword = document.getElementById('own-current-password').value;
-            const newPassword = document.getElementById('own-new-password').value;
-            const msg = document.getElementById('own-password-message');
-
-            if (!oldPassword || !newPassword) {
-                msg.textContent = 'الرجاء تعبئة جميع الحقول';
-                msg.style.color = 'red';
-                return;
-            }
-
-            const username = localStorage.getItem('user');
-            const role = localStorage.getItem('role');
-
-            try {
-                const res = await fetch(`${API_BASE}/change-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, oldPassword, newPassword, role })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    msg.textContent = '✅ تم تغيير كلمة المرور بنجاح';
-                    msg.style.color = 'green';
-                    document.getElementById('own-current-password').value = '';
-                    document.getElementById('own-new-password').value = '';
-                } else {
-                    msg.textContent = '❌ ' + (data.error || 'فشل التغيير');
-                    msg.style.color = 'red';
-                }
-            } catch (err) {
-                msg.textContent = 'خطأ في الاتصال';
-                msg.style.color = 'red';
-            }
-        });
-    }
-}
-// Excel Import Logic
-function setupExcelImport() {
-    const btn = document.getElementById('import-excel-btn');
-    const fileInput = document.getElementById('excel-file-input');
-    const msg = document.getElementById('import-message');
-
-    if (!btn) return;
-
-    btn.addEventListener('click', () => {
-        const file = fileInput.files[0];
-        if (!file) {
-            msg.textContent = 'الرجاء اختيار ملف';
-            msg.style.color = 'red';
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
-            if (jsonData.length < 2) {
-                msg.textContent = 'الملف فارغ أو لا يحتوي على بيانات';
-                msg.style.color = 'red';
-                return;
-            }
-
-            // Map Data (Assume headers are row 0, data starts row 1)
-            const records = [];
-            // Skip header row
-            for (let i = 1; i < jsonData.length; i++) {
-                const row = jsonData[i];
-                if (!row || row.length === 0) continue;
-
-                records.push({
-                    day: row[0] || '',
-                    date: row[1] || '',
-                    beneficiary_name: row[2] || '',
-                    id_number: row[3] || '',
-                    phone_number: row[4] || '',
-                    case_number: row[5] || '',
-                    department: row[6] || '',
-                    capacity: row[7] || '',
-                    description: row[8] || '',
-                    employee: row[9] || localStorage.getItem('user') // Default to current user if missing
-                });
-            }
-
-            if (records.length === 0) {
-                msg.textContent = 'لم يتم العثور على سجلات صالحة';
-                msg.style.color = 'red';
-                return;
-            }
-
-            try {
-                btn.disabled = true;
-                btn.textContent = 'جاري الاستيراد...';
-
-                const res = await fetch(`${API_BASE}/records/bulk`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(records)
-                });
-
-                const result = await res.json();
-
-                if (res.ok) {
-                    msg.textContent = `✅ تم استيراد ${result.count} سجل بنجاح`;
-                    msg.style.color = 'green';
-                    fileInput.value = ''; // Reset
-                } else {
-                    msg.textContent = '❌ خطأ: ' + (result.error || 'فشل الاستيراد');
-                    msg.style.color = 'red';
-                }
-            } catch (err) {
-                msg.textContent = 'خطأ في الاتصال بالخادم';
-                msg.style.color = 'red';
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'استيراد البيانات';
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    });
-}
-document.getElementById(btnId).addEventListener('click', async () => {
-    const input = document.getElementById(inputId);
-    const name = input.value;
-    if (!name) return;
-
-    await fetch(`${API_BASE}/settings/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-    });
-
-    input.value = '';
-    loadAdminData();
 });
-}
 
-// --- Data Loading ---
-async function loadEntryFormData() {
-    await loadOptionsIntoSelect('department', 'departments');
-    await loadOptionsIntoSelect('capacity', 'capacities');
-    await loadOptionsIntoSelect('description', 'descriptions');
-    // Employee is auto-set or hidden
-}
-
-async function loadAdminData() {
-    await loadList('admin-employee-list', 'employees', 'deleteEmployee');
-    await loadList('admin-department-list', 'departments', 'deleteDepartment');
-    await loadList('admin-capacity-list', 'capacities', 'deleteCapacity');
-    await loadList('admin-description-list', 'descriptions', 'deleteDescription');
-
-    // Load password dropdown
-    loadEmployeesIntoSelect('password-employees-list-optgroup', true);
-}
-
-// Helpers
-async function loadOptionsIntoSelect(selectId, endpoint) {
-    const select = document.getElementById(selectId);
-    if (!select) return;
-
-    // Save first option
-    const firstHtml = select.options[0].outerHTML;
-
-    try {
-        const res = await fetch(`${API_BASE}/settings/${endpoint}`);
-        const data = await res.json();
-
-        select.innerHTML = firstHtml;
-        data.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.name;
-            opt.textContent = item.name;
-            select.appendChild(opt);
-        });
-    } catch (e) { console.error(e); }
-}
-
-async function loadEmployeesIntoSelect(groupId, isOptGroup = false) {
-    const container = document.getElementById(groupId);
-    if (!container) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/settings/employees`);
-        const data = await res.json();
-        container.innerHTML = '';
-        data.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.name;
-            opt.textContent = item.name;
-            container.appendChild(opt);
-        });
-    } catch (e) { console.error(e); }
-}
-
-async function loadList(listId, endpoint, deleteFunc) {
-    const list = document.getElementById(listId);
-    if (!list) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/settings/${endpoint}`);
-        const data = await res.json();
-        list.innerHTML = '';
-        data.forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'admin-list-item';
-            li.innerHTML = `<span>${item.name}</span> <button class="btn btn-danger btn-small" onclick="${deleteFunc}(${item.id})">حذف</button>`;
-            list.appendChild(li);
-        });
-    } catch (e) { console.error(e); }
-}
-
-// --- Global Delete Functions (for onclick) ---
-window.deleteEmployee = (id) => deleteItem('employees', id);
-window.deleteDepartment = (id) => deleteItem('departments', id);
-window.deleteCapacity = (id) => deleteItem('capacities', id);
-window.deleteDescription = (id) => deleteItem('descriptions', id);
-
-async function deleteItem(endpoint, id) {
-    if (!confirm('هل أنت متأكد من الحذف؟')) return;
-    await fetch(`${API_BASE}/settings/${endpoint}/${id}`, { method: 'DELETE' });
-    loadAdminData();
-}
-
-// --- Charts & Tables (Simplified for Rewrite) ---
-// Note: Keeping core chart logic but simplified structure
-async function reloadDataAndCharts() {
-    // Basic implementation for brevity - fully implementing reqs
-    const res = await fetch(`${API_BASE}/records`); // Add filters as needed
-    const json = await res.json();
-    const data = json.data || [];
-
-    document.getElementById('total-records').textContent = data.length;
-
-    // Initialize charts if not exists
-    if (!charts.department) initCharts();
-
-    updateChart(charts.department, data, 'department');
-    updateChart(charts.capacity, data, 'capacity');
-    // ... other charts
-}
-
-function initCharts() {
-    const ctxDept = document.getElementById('department-chart');
-    if (ctxDept) {
-        charts.department = new Chart(ctxDept, {
-            type: 'bar',
-            data: { labels: [], datasets: [{ label: 'عدد', data: [], backgroundColor: '#379777' }] }
-        });
+// دالة تسجيل الدخول
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const errorDiv = document.getElementById('error-message');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    // إخفاء رسائل الخطأ السابقة
+    if (errorDiv) {
+        errorDiv.textContent = '';
+        errorDiv.style.display = 'none';
     }
-    const ctxCap = document.getElementById('capacity-chart');
-    if (ctxCap) {
-        charts.capacity = new Chart(ctxCap, {
-            type: 'doughnut',
-            data: { labels: [], datasets: [{ data: [], backgroundColor: ['#379777', '#f4ce14', '#45474b'] }] }
-        });
+    
+    // التحقق من المدخلات
+    if (!username || !password) {
+        showError('الرجاء إدخال اسم المستخدم وكلمة المرور');
+        return;
     }
-    // Add others as needed
+    
+    // تعطيل الزر أثناء الإرسال
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري تسجيل الدخول...';
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // حفظ بيانات المستخدم
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            
+            // التوجيه حسب الدور
+            redirectToHomePage(data.user.role);
+        } else {
+            showError(data.message || 'فشل تسجيل الدخول. حاول مرة أخرى');
+        }
+    } catch (error) {
+        console.error('خطأ في الاتصال:', error);
+        showError('حدث خطأ في الاتصال بالخادم. تأكد من تشغيل الخادم على المنفذ 3000');
+    } finally {
+        // إعادة تفعيل الزر
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'تسجيل الدخول';
+        }
+    }
 }
 
-function updateChart(chart, data, key) {
-    if (!chart) return;
-    const counts = {};
-    data.forEach(d => counts[d[key]] = (counts[d[key]] || 0) + 1);
-    chart.data.labels = Object.keys(counts);
-    chart.data.datasets[0].data = Object.values(counts);
-    chart.update();
+// دالة عرض رسالة الخطأ
+function showError(message) {
+    let errorDiv = document.getElementById('error-message');
+    
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'error-message';
+        errorDiv.style.cssText = `
+            background-color: #fee;
+            color: #c33;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #fcc;
+            border-radius: 5px;
+            text-align: center;
+        `;
+        
+        const form = document.getElementById('loginForm');
+        if (form) {
+            form.insertBefore(errorDiv, form.firstChild);
+        }
+    }
+    
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
 }
 
-// Placeholder for other tab updates
-async function updateDataTable() {
-    const res = await fetch(`${API_BASE}/records`);
-    const json = await res.json();
-    const data = json.data || [];
-    const container = document.getElementById('data-table-container');
-
-    let html = '<table><thead><tr><th>اليوم</th><th>التاريخ</th><th>الاسم</th><th>الدائرة</th><th>الصفة</th><th>الوصف</th></tr></thead><tbody>';
-    data.forEach(row => {
-        html += `<tr><td>${row.day}</td><td>${row.date}</td><td>${row.beneficiary_name}</td><td>${row.department}</td><td>${row.capacity}</td><td>${row.description}</td></tr>`;
-    });
-    html += '</tbody></table>';
-    container.innerHTML = html;
+// دالة التوجيه للصفحة الرئيسية
+function redirectToHomePage(role) {
+    if (role === 'admin') {
+        window.location.href = 'admin.html';
+    } else {
+        window.location.href = 'entry.html';
+    }
 }
-function updateSimpleTable() { updateDataTable(); /* Alias for now */ }
-function updateComprehensiveStats() { /* Implement similar to charts */ }
+
+// دالة الحصول على المستخدم الحالي
+function getCurrentUser() {
+    const userStr = localStorage.getItem('currentUser');
+    if (!userStr) return null;
+    
+    try {
+        return JSON.parse(userStr);
+    } catch (e) {
+        console.error('خطأ في قراءة بيانات المستخدم:', e);
+        return null;
+    }
+}
+
+// دالة تسجيل الخروج
+function handleLogout() {
+    if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'index.html';
+    }
+}
+
+// دالة عرض اسم المستخدم
+function displayUsername() {
+    const user = getCurrentUser();
+    const usernameElement = document.getElementById('current-username');
+    
+    if (user && usernameElement) {
+        usernameElement.textContent = user.username;
+    }
+}
+
+// دالة تحميل الدوائر
+async function loadDepartments() {
+    try {
+        const response = await fetch(`${API_URL}/departments`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = document.getElementById('department');
+            if (select) {
+                select.innerHTML = '<option value="">اختر الدائرة</option>';
+                data.departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.name;
+                    option.textContent = dept.name;
+                    select.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('خطأ في تحميل الدوائر:', error);
+    }
+}
+
+// دالة إضافة مستفيد
+async function addBeneficiary(beneficiaryData) {
+    try {
+        const response = await fetch(`${API_URL}/beneficiaries`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(beneficiaryData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('تم إضافة بيانات المستفيد بنجاح');
+            return true;
+        } else {
+            alert(data.message || 'فشل إضافة بيانات المستفيد');
+            return false;
+        }
+    } catch (error) {
+        console.error('خطأ في إضافة المستفيد:', error);
+        alert('حدث خطأ في الاتصال بالخادم');
+        return false;
+    }
+}
+
+// دالة تحميل المستفيدين
+async function loadBeneficiaries(filters = {}) {
+    try {
+        const params = new URLSearchParams(filters);
+        const response = await fetch(`${API_URL}/beneficiaries?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            return data.beneficiaries;
+        }
+        return [];
+    } catch (error) {
+        console.error('خطأ في تحميل المستفيدين:', error);
+        return [];
+    }
+}
+
+// دالة تحميل الإحصائيات
+async function loadStatistics(filters = {}) {
+    try {
+        const params = new URLSearchParams(filters);
+        const response = await fetch(`${API_URL}/statistics?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            return data.statistics;
+        }
+        return [];
+    } catch (error) {
+        console.error('خطأ في تحميل الإحصائيات:', error);
+        return [];
+    }
+}
+
+// دالة تحميل المستخدمين (للمدير)
+async function loadUsers() {
+    try {
+        const response = await fetch(`${API_URL}/users`);
+        const data = await response.json();
+        
+        if (data.success) {
+            return data.users;
+        }
+        return [];
+    } catch (error) {
+        console.error('خطأ في تحميل المستخدمين:', error);
+        return [];
+    }
+}
+
+// دالة إضافة مستخدم (للمدير)
+async function addUser(userData) {
+    try {
+        const response = await fetch(`${API_URL}/users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('تم إضافة المستخدم بنجاح');
+            return true;
+        } else {
+            alert(data.message || 'فشل إضافة المستخدم');
+            return false;
+        }
+    } catch (error) {
+        console.error('خطأ في إضافة المستخدم:', error);
+        alert('حدث خطأ في الاتصال بالخادم');
+        return false;
+    }
+}
+
+// دالة حذف مستخدم (للمدير)
+async function deleteUser(userId) {
+    if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/users/${userId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('تم حذف المستخدم بنجاح');
+            return true;
+        } else {
+            alert(data.message || 'فشل حذف المستخدم');
+            return false;
+        }
+    } catch (error) {
+        console.error('خطأ في حذف المستخدم:', error);
+        alert('حدث خطأ في الاتصال بالخادم');
+        return false;
+    }
+}
+
+// دالة إضافة دائرة
+async function addDepartment(name) {
+    try {
+        const response = await fetch(`${API_URL}/departments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('تم إضافة الدائرة بنجاح');
+            return true;
+        } else {
+            alert(data.message || 'فشل إضافة الدائرة');
+            return false;
+        }
+    } catch (error) {
+        console.error('خطأ في إضافة الدائرة:', error);
+        alert('حدث خطأ في الاتصال بالخادم');
+        return false;
+    }
+}
+
+// دالة حذف دائرة
+async function deleteDepartment(deptId) {
+    if (!confirm('هل أنت متأكد من حذف هذه الدائرة؟')) {
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/departments/${deptId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('تم حذف الدائرة بنجاح');
+            return true;
+        } else {
+            alert(data.message || 'فشل حذف الدائرة');
+            return false;
+        }
+    } catch (error) {
+        console.error('خطأ في حذف الدائرة:', error);
+        alert('حدث خطأ في الاتصال بالخادم');
+        return false;
+    }
+}
+
+// تصدير الدوال للاستخدام في صفحات أخرى
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        getCurrentUser,
+        handleLogout,
+        displayUsername,
+        loadDepartments,
+        addBeneficiary,
+        loadBeneficiaries,
+        loadStatistics,
+        loadUsers,
+        addUser,
+        deleteUser,
+        addDepartment,
+        deleteDepartment
+    };
+}
