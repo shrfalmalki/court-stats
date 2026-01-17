@@ -176,6 +176,63 @@ function setupLogin() {
             showError('حدث خطأ في الاتصال بالخادم');
         }
     });
+
+    // Recovery Modal Logic
+    const recoveryModal = document.getElementById('recovery-modal');
+    const forgotLink = document.getElementById('forgot-password-link');
+
+    if (forgotLink) {
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log("Opening Recovery Modal");
+            recoveryModal.style.display = 'flex';
+        });
+    }
+
+    const cancelBtn = document.getElementById('cancel-reset-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent accidental form submit
+            recoveryModal.style.display = 'none';
+        });
+    }
+
+    const confirmBtn = document.getElementById('confirm-reset-btn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async (e) => {
+            e.preventDefault(); // Prevent accidental form submit
+            const key = document.getElementById('recovery-key').value;
+            if (!key) return alert("الرجاء إدخال مفتاح الطوارئ");
+
+            confirmBtn.innerText = "جاري التحقق...";
+            confirmBtn.disabled = true;
+
+            try {
+                console.log(`Sending recovery request to ${API_BASE}/admin/reset-password`);
+                const res = await fetch(`${API_BASE}/admin/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recoveryKey: key })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(data.message || "تمت إعادة تعيين كلمة المرور بنجاح");
+                    recoveryModal.style.display = 'none';
+                    document.getElementById('recovery-key').value = '';
+                } else {
+                    alert(data.error || "خطأ أثناء إعادة التعيين");
+                }
+            } catch (e) {
+                console.error("Recovery Error:", e);
+                alert("حدث خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.");
+            } finally {
+                confirmBtn.innerText = "تأكيد";
+                confirmBtn.disabled = false;
+            }
+        });
+    }
 }
 
 function showError(msg) {
