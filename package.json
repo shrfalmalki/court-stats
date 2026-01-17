@@ -1,19 +1,32 @@
 {
-  "dependencies": {
-    "body-parser": "^2.2.1",
-    "cors": "^2.8.5",
-    "express": "^5.2.1",
-    "sqlite3": "^5.1.7"
-  },
-  "name": "crimson-sunspot",
+  "name": "court-stats",
   "version": "1.0.0",
-  "description": "",
+  "description": "نظام إدارة المستفيدين - Beneficiaries Management System",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "init-db": "node database.js",
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "court",
+    "statistics",
+    "beneficiaries",
+    "management"
+  ],
+  "author": "shrfalmalki",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
