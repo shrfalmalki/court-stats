@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إحصائيات خدمات المستفيدين</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Akhbar:wght@400;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="official-header">
+            <div class="official-title">
+                المحكمة الجزائية بمحافظة جدة
+            </div>
+            <div class="official-subtitle">
+                إدارة الدعاوى والأحكام
+            </div>
+            <div class="official-department">
+                قسم خدمات المستفيدين
+            </div>
+        </div>
+        <div class="header">
+            <h1 id="site-title">إحصائيات خدمات المستفيدين</h1>
+            <div class="nav-tabs no-print">
+                <button class="nav-tab active" data-page="charts">📊 الإحصائيات</button>
+                <button class="nav-tab" data-page="comprehensive">📈 إحصائيات شاملة</button>
+                <button class="nav-tab" data-page="data">📋 البيانات</button>
+                <button class="nav-tab" data-page="simple">📄 جدول مبسط</button>
+                <button class="nav-tab" data-page="entry">➕ إدخال البيانات</button>
+                <button class="nav-tab" data-page="admin">🛠️ الإدارة</button>
+                <button class="nav-tab" data-page="info">ℹ️ المعلومات</button>
+                <button class="nav-tab logout-btn" id="logout-btn" style="background-color: #dc3545; color: white;">🚪
+                    خروج</button>
+            </div>
+            <div id="user-dashboard"
+                style="display: none; justify-content: center; margin-top: 15px; color: rgba(255,255,255,0.9); font-weight: bold; font-size: 16px;">
+                👋 مرحباً بك: <span id="header-user-name" style="color: #f4ce14; margin-right: 5px;"></span>
+            </div>
+        </div>
+
+        <!-- Main Login Screen -->
+        <div id="main-login-screen">
+            <div class="login-container">
+                <h2>🔐 تسجيل الدخول</h2>
+                <div class="error-message" id="main-login-error">
+                    بيانات الدخول غير صحيحة
+                </div>
+                <form id="main-login-form">
+                    <div class="form-group">
+                        <label for="login-type">نوع الدخول</label>
+                        <select id="login-type">
+                            <option value="">اختر الحساب...</option>
+                            <option value="admin">الإدارة (المدير)</option>
+                            <optgroup label="الموظفين" id="login-employees-list-optgroup">
+                                <!-- Populated dynamically -->
+                            </optgroup>
+                        </select>
+                    </div>
+                    <!-- Hidden inputs for username based on selection logic -->
+                    <div class="form-group">
+                        <label for="login-password">كلمة المرور</label>
+                        <input type="password" id="login-password" required placeholder="أدخل كلمة المرور">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <span>دخول للنظام</span>
+                    </button>
+                </form>
+                <div style="text-align: center; margin-top: 20px; font-size: 14px; opacity: 0.7;">
+                    نظام إحصائيات خدمات المستفيدين
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة إدخال البيانات -->
+        <div id="page-entry" class="page">
+            <div id="entry-form-container">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: #379777; margin: 0; font-size: 26px;">📝 إدخال بيانات جديدة</h2>
+                        <div
+                            style="background: #e8f5e9; padding: 8px 15px; border-radius: 8px; color: #2e7d32; font-weight: bold;">
+                            👤 الموظف: <span id="current-employee-name">-</span>
+                        </div>
+                    </div>
+
+                    <div class="success-message" id="entry-success">
+                        تم حفظ البيانات بنجاح!
+                    </div>
+                    <form id="data-entry-form">
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                            <div class="form-group"><label for="day">اليوم *</label> <select id="day" required>
+                                    <option value="">اختر اليوم</option>
+                                    <option value="الأحد">الأحد</option>
+                                    <option value="الاثنين">الاثنين</option>
+                                    <option value="الثلاثاء">الثلاثاء</option>
+                                    <option value="الأربعاء">الأربعاء</option>
+                                    <option value="الخميس">الخميس</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label for="date">التاريخ *</label> <input type="date" id="date"
+                                    required>
+                            </div>
+                            <div class="form-group"><label for="beneficiary-name">اسم المستفيد</label> <input
+                                    type="text" id="beneficiary-name" placeholder="أدخل اسم المستفيد">
+                            </div>
+                            <div class="form-group"><label for="id-number">رقم الهوية</label> <input type="text"
+                                    id="id-number" placeholder="أدخل رقم الهوية">
+                            </div>
+                            <div class="form-group"><label for="phone-number">رقم الجوال</label> <input type="tel"
+                                    id="phone-number" placeholder="05xxxxxxxx">
+                            </div>
+                            <div class="form-group"><label for="case-number">رقم القضية</label> <input type="text"
+                                    id="case-number" placeholder="أدخل رقم القضية">
+                            </div>
+                            <div class="form-group"><label for="department">الدائرة *</label> <select id="department"
+                                    required>
+                                    <option value="">جار التحميل...</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label for="capacity">الصفة *</label> <select id="capacity"
+                                    required>
+                                    <option value="">اختر الصفة</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label for="description">سبب الزيارة *</label> <select
+                                    id="description" required>
+                                    <option value="">اختر الوصف</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display:none;"><label for="employee">الموظف المختص *</label>
+                                <input type="text" id="employee" readonly>
+                            </div>
+                        </div>
+                        <div style="margin-top: 30px; display: flex; gap: 15px;"><button type="submit"
+                                class="btn btn-primary" id="submit-btn" style="flex: 1; justify-content: center;"> <span
+                                    id="submit-btn-text">💾 حفظ البيانات</span> </button> <button type="reset"
+                                class="btn btn-secondary">🔄 مسح النموذج</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة الإحصائيات -->
+        <div id="page-charts" class="page">
+            <div class="welcome-banner">
+                <div class="welcome-content">
+                    <h2>📊 مرحباً بك في نظام إحصائيات خدمات المستفيدين</h2>
+                    <p>تتبع وتحليل خدمات المستفيدين بطريقة احترافية وسهلة</p>
+                </div>
+            </div>
+            <div class="card no-print">
+                <div style="margin-bottom: 15px;"><label
+                        style="display: block; margin-bottom: 8px; color: #45474b; font-weight: 600; font-size: 15px;">فلاتر
+                        سريعة</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;"><button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="today"
+                            data-target="chart">📅 اليوم</button> <button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="yesterday"
+                            data-target="chart">📆 أمس</button> <button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="week"
+                            data-target="chart">📊 هذا الأسبوع</button> <button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="all"
+                            data-target="chart">🔄 الكل</button>
+                    </div>
+                </div>
+                <div class="filters">
+                    <div class="filter-group"><label for="chart-date-from">من تاريخ</label> <input type="date"
+                            id="chart-date-from">
+                    </div>
+                    <div class="filter-group"><label for="chart-date-to">إلى تاريخ</label> <input type="date"
+                            id="chart-date-to">
+                    </div>
+                    <div class="filter-group" style="display: flex; align-items: flex-end; gap: 10px;"><button
+                            class="btn btn-primary" id="apply-chart-filter">تطبيق الفلتر</button> <button
+                            class="btn btn-secondary" id="print-charts">🖨️ طباعة</button>
+                    </div>
+                </div>
+            </div>
+            <div id="charts-content">
+                <div class="stats-grid">
+                    <div class="stat-card stat-card-1">
+                        <div class="stat-icon">
+                            📋
+                        </div>
+                        <h3>إجمالي السجلات</h3>
+                        <p class="number" id="total-records">0</p>
+                    </div>
+                    <div class="stat-card stat-card-2">
+                        <div class="stat-icon">
+                            🏛️
+                        </div>
+                        <h3>أكثر دائرة تكراراً</h3>
+                        <p class="number" id="most-common-department" style="font-size: 22px; line-height: 1.4;">-</p>
+                    </div>
+                    <div class="stat-card stat-card-3">
+                        <div class="stat-icon">
+                            🔄
+                        </div>
+                        <h3>أكثر سبب للزيارة</h3>
+                        <p class="number" id="most-common-reason" style="font-size: 20px; line-height: 1.4;">-</p>
+                    </div>
+                    <div class="stat-card stat-card-1">
+                        <div class="stat-icon">
+                            🎯
+                        </div>
+                        <h3>أكثر صفة تكراراً</h3>
+                        <p class="number" id="most-common-capacity" style="font-size: 22px; line-height: 1.4;">-</p>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="card chart-card-primary">
+                        <div class="chart-header">
+                            <h3>📊 التوزيع حسب الدائرة</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="department-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card-secondary">
+                        <div class="chart-header">
+                            <h3>🎯 التوزيع حسب الصفة</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="capacity-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="card chart-card-accent">
+                    <div class="chart-header">
+                        <h3>📝 سبب الزيارة</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="description-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card chart-card-highlight">
+                    <div class="chart-header">
+                        <h3>📅 التوزيع حسب الأيام</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="day-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة الإحصائيات الشاملة -->
+        <div id="page-comprehensive" class="page">
+            <div class="welcome-banner">
+                <div class="welcome-content">
+                    <h2>📈 إحصائيات شاملة لجميع البيانات</h2>
+                    <p>تحليل تفصيلي وشامل لكافة البيانات المسجلة في النظام</p>
+                </div>
+            </div>
+            <div class="card no-print">
+                <div style="margin-bottom: 15px;"><label
+                        style="display: block; margin-bottom: 8px; color: #45474b; font-weight: 600; font-size: 15px;">فلاتر
+                        سريعة</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;"><button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="today"
+                            data-target="comprehensive">📅 اليوم</button> <button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="yesterday"
+                            data-target="comprehensive">📆 أمس</button> <button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="week"
+                            data-target="comprehensive">📊 هذا الأسبوع</button> <button
+                            class="btn btn-secondary btn-small quick-filter-btn" data-filter="all"
+                            data-target="comprehensive">🔄 الكل</button>
+                    </div>
+                </div>
+                <div class="filters">
+                    <div class="filter-group"><label for="comprehensive-date-from">من تاريخ</label> <input type="date"
+                            id="comprehensive-date-from">
+                    </div>
+                    <div class="filter-group"><label for="comprehensive-date-to">إلى تاريخ</label> <input type="date"
+                            id="comprehensive-date-to">
+                    </div>
+                    <div class="filter-group" style="display: flex; align-items: flex-end; gap: 10px;"><button
+                            class="btn btn-primary" id="apply-comprehensive-filter">تطبيق الفلتر</button> <button
+                            class="btn btn-secondary" id="print-comprehensive">🖨️ طباعة التقرير الشامل</button>
+                    </div>
+                </div>
+            </div>
+            <div id="comprehensive-content">
+                <div class="card">
+                    <h2
+                        style="color: #379777; margin-bottom: 20px; font-size: 26px; border-bottom: 3px solid #f4ce14; padding-bottom: 10px;">
+                        📊 الملخص العام</h2>
+                    <div class="summary-grid" id="summary-stats"></div>
+                </div>
+                <div class="comprehensive-stats-grid">
+                    <div class="ranking-card">
+                        <h3>🏛️ ترتيب الدوائر</h3>
+                        <div id="department-ranking"></div>
+                    </div>
+                    <div class="ranking-card">
+                        <h3>🎯 ترتيب الصفات</h3>
+                        <div id="capacity-ranking"></div>
+                    </div>
+                    <div class="ranking-card">
+                        <h3>👥 ترتيب الموظفين</h3>
+                        <div id="employee-ranking"></div>
+                    </div>
+                    <div class="ranking-card">
+                        <h3>📅 ترتيب الأيام</h3>
+                        <div id="day-ranking"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2
+                        style="color: #379777; margin-bottom: 20px; font-size: 26px; border-bottom: 3px solid #f4ce14; padding-bottom: 10px;">
+                        📝 ترتيب أسباب الزيارة (الأكثر تكراراً)</h2>
+                    <div id="description-ranking"></div>
+                </div>
+                <div class="card chart-card-primary">
+                    <div class="chart-header">
+                        <h3>📊 مقارنة أداء الموظفين</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="employee-chart"></canvas>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="card chart-card-secondary">
+                        <div class="chart-header">
+                            <h3>📆 التوزيع الشهري</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card chart-card-accent">
+                        <div class="chart-header">
+                            <h3>👥 نسب مساهمة الموظفين</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="employee-pie-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2
+                        style="color: #379777; margin-bottom: 20px; font-size: 26px; border-bottom: 3px solid #f4ce14; padding-bottom: 10px;">
+                        📋 جدول تفصيلي - الدوائر والصفات</h2>
+                    <div id="detailed-table"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة البيانات -->
+        <div id="page-data" class="page">
+            <div class="card no-print">
+                <div class="filters">
+                    <div class="filter-group"><label for="data-date-from">من تاريخ</label> <input type="date"
+                            id="data-date-from">
+                    </div>
+                    <div class="filter-group"><label for="data-date-to">إلى تاريخ</label> <input type="date"
+                            id="data-date-to">
+                    </div>
+                    <div class="filter-group"><label for="filter-department">الدائرة</label> <select
+                            id="filter-department">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div class="filter-group"><label for="filter-capacity">الصفة</label> <select id="filter-capacity">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div class="filter-group"><label for="filter-day">اليوم</label> <select id="filter-day">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="display: flex; align-items: flex-end; gap: 10px;"><button
+                            class="btn btn-primary" id="apply-data-filter">تطبيق الفلتر</button> <button
+                            class="btn btn-secondary" id="export-data-excel">📊 تصدير إكسيل</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="data-table-container"></div>
+            </div>
+        </div>
+
+        <!-- صفحة الجدول المبسط -->
+        <div id="page-simple" class="page">
+            <div class="card no-print">
+                <div class="filters">
+                    <div class="filter-group"><label for="simple-date-from">من تاريخ</label> <input type="date"
+                            id="simple-date-from">
+                    </div>
+                    <div class="filter-group"><label for="simple-date-to">إلى تاريخ</label> <input type="date"
+                            id="simple-date-to">
+                    </div>
+                    <div class="filter-group"><label for="simple-filter-department">الدائرة</label> <select
+                            id="simple-filter-department">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div class="filter-group"><label for="simple-filter-capacity">الصفة</label> <select
+                            id="simple-filter-capacity">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div class="filter-group"><label for="simple-filter-description">سبب الزيارة</label> <select
+                            id="simple-filter-description">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="display: flex; align-items: flex-end; gap: 10px;"><button
+                            class="btn btn-primary" id="apply-simple-filter">تطبيق الفلتر</button> <button
+                            class="btn btn-secondary" id="print-simple-table">🖨️ طباعة</button> <button
+                            class="btn btn-secondary" id="export-simple-excel">📊 تصدير إكسيل</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h2 style="color: #379777; margin-bottom: 20px; font-size: 26px;">📄 جدول البيانات المبسط</h2>
+                <div id="simple-table-container"></div>
+            </div>
+        </div>
+
+        <!-- صفحة الإدارة -->
+        <div id="page-admin" class="page">
+            <!-- Login Removed - Protected by Main Login + Maybe role check in JS? 
+             User asked for login screen at START. 
+             If user is "Employee", they shouldn't see Admin tab or get error. 
+             We will handle this in JS visibility. -->
+            <div id="admin-content">
+                <h2 style="color: #379777; margin-bottom: 20px;">🛠️ لوحة الإدارة</h2>
+
+                <!-- إدارة الموظفين -->
+                <div class="card">
+                    <h2 style="color: #379777;">👥 إدارة الموظفين</h2>
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <input type="text" id="new-employee-name" placeholder="اسم الموظف الجديد">
+                        <button class="btn btn-primary" id="add-employee-btn">إضافة</button>
+                    </div>
+                    <ul id="admin-employee-list" style="list-style: none; padding: 0;"></ul>
+                </div>
+
+                <!-- استيراد البيانات -->
+                <div class="card">
+                    <h2 style="color: #379777; margin-bottom: 20px;">📤 استيراد بيانات من ملف Excel</h2>
+                    <div class="info-section">
+                        <p>يمكنك استيراد السجلات من ملف Excel. يجب أن يحتوي الملف على الأعمدة التالية وبنفس الترتيب:</p>
+                        <ul>
+                            <li>اليوم، التاريخ، الاسم، رقم الهوية، رقم الجوال، رقم القضية، الدائرة، الصفة، الوصف، الموظف
+                                (اختياري)</li>
+                        </ul>
+                    </div>
+                    <div class="form-group">
+                        <input type="file" id="excel-file-input" accept=".xlsx, .xls">
+                    </div>
+                    <button class="btn btn-primary" id="import-excel-btn">استيراد البيانات</button>
+                    <div id="import-message" style="margin-top: 10px; font-weight: bold;"></div>
+                </div>
+
+                <!-- إدارة الدوائر -->
+                <div class="card">
+                    <h2 style="color: #379777;">🏛️ إدارة الدوائر</h2>
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <input type="text" id="new-department-name" placeholder="اسم الدائرة الجديدة">
+                        <button class="btn btn-primary" id="add-department-btn">إضافة</button>
+                    </div>
+                    <ul id="admin-department-list" style="list-style: none; padding: 0;"></ul>
+                </div>
+
+                <!-- إدارة الصفات -->
+                <div class="card">
+                    <h2 style="color: #379777;">🎯 إدارة الصفات</h2>
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <input type="text" id="new-capacity-name" placeholder="اسم الصفة الجديدة">
+                        <button class="btn btn-primary" id="add-capacity-btn">إضافة</button>
+                    </div>
+                    <ul id="admin-capacity-list" style="list-style: none; padding: 0;"></ul>
+                </div>
+
+                <!-- إدارة أسباب الزيارة -->
+                <div class="card">
+                    <h2 style="color: #379777;">📝 إدارة أسباب الزيارة</h2>
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <input type="text" id="new-description-name" placeholder="سبب الزيارة الجديد">
+                        <button class="btn btn-primary" id="add-description-btn">إضافة</button>
+                    </div>
+                    <ul id="admin-description-list" style="list-style: none; padding: 0;"></ul>
+                </div>
+
+                <!-- تغيير كلمة المرور -->
+                <div class="card">
+                    <h2 style="color: #379777;">🔒 تغيير كلمة المرور</h2>
+                    <div class="form-group">
+                        <label>الحساب المراد تغيير كلمة مروره</label>
+                        <select id="password-user-select">
+                            <option value="">اختر الحساب...</option>
+                            <option value="admin">الإدارة (المدير)</option>
+                            <optgroup label="الموظفين" id="password-employees-list-optgroup">
+                                <!-- Populated dynamically -->
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة المرور الحالية</label>
+                        <input type="password" id="current-password">
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة المرور الجديدة</label>
+                        <input type="password" id="new-password">
+                    </div>
+                    <button class="btn btn-secondary" id="change-password-btn">تغيير كلمة المرور</button>
+                    <div id="password-message" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- صفحة المعلومات -->
+    <div id="page-info" class="page">
+        <!-- Change Own Password -->
+        <div class="card" style="margin-bottom: 20px;">
+            <h2 style="color: #379777; margin-bottom: 20px;">🔒 تغيير كلمة المرور الشخصية</h2>
+            <div class="form-group">
+                <label>كلمة المرور الحالية</label>
+                <input type="password" id="own-current-password" placeholder="أدخل كلمة المرور الحالية">
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور الجديدة</label>
+                <input type="password" id="own-new-password" placeholder="أدخل كلمة المرور الجديدة">
+            </div>
+            <button class="btn btn-primary" id="change-own-password-btn">تحديث كلمة المرور</button>
+            <div id="own-password-message" style="margin-top: 10px; font-weight: bold;"></div>
+        </div>
+
+        <div class="card"
+            style="background: rgba(220, 53, 69, 0.1); border: 2px solid rgba(220, 53, 69, 0.3); margin-bottom: 20px;">
+            <h2
+                style="color: #dc3545; margin-bottom: 20px; font-size: 26px; border-bottom: 3px solid #dc3545; padding-bottom: 10px;">
+                ⚠️ أداة مسح البيانات</h2>
+            <p style="color: #721c24; margin-bottom: 20px; font-weight: 600; font-size: 16px;">تحذير: هذه الأداة
+                تقوم بحذف البيانات نهائياً ولا يمكن استرجاعها!</p>
+            <div class="error-message" id="delete-error" style="display: none;"></div>
+            <div class="success-message" id="delete-success" style="display: none;"></div>
+            <form id="bulk-delete-form">
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group"><label for="delete-date-from">من تاريخ *</label> <input type="date"
+                            id="delete-date-from" required>
+                    </div>
+                    <div class="form-group"><label for="delete-date-to">إلى تاريخ *</label> <input type="date"
+                            id="delete-date-to" required>
+                    </div>
+                    <div class="form-group"><label for="delete-password">الرقم السري *</label> <input type="password"
+                            id="delete-password" required placeholder="أدخل الرقم السري">
+                    </div>
+                </div>
+                <div id="delete-preview"
+                    style="display: none; background: rgba(255, 255, 255, 0.8); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #dc3545;">
+                    <h4 style="color: #dc3545; margin: 0 0 10px 0; font-size: 17px;">📋 معاينة البيانات المراد
+                        حذفها:</h4>
+                    <p style="margin: 5px 0; font-size: 17px; font-weight: 600;" id="delete-count-preview"></p>
+                    <p style="margin: 5px 0; color: #721c24; font-size: 15px;">⚠️ سيتم حذف هذه السجلات نهائياً</p>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;"><button type="button" class="btn btn-secondary"
+                        id="preview-delete-btn"> 👁️ معاينة البيانات </button> <button type="submit"
+                        class="btn btn-danger" id="confirm-delete-btn" style="display: none;"> <span
+                            id="delete-btn-text">🗑️ تأكيد الحذف النهائي</span> </button> <button type="button"
+                        class="btn btn-secondary" id="cancel-delete-btn" style="display: none;"> ❌ إلغاء </button>
+                </div>
+            </form>
+        </div>
+        <div class="info-section">
+            <h2>📖 دليل استخدام الموقع</h2>
+            <h3>🎯 نظرة عامة</h3>
+            <p>موقع إحصائيات خدمات المستفيدين هو نظام متكامل لإدارة وتتبع خدمات المستفيدين في المحكمة. يوفر النظام
+                أدوات لإدخال البيانات، عرض الإحصائيات، وتحليل البيانات بطريقة سهلة وفعالة.</p>
+            <h3>📑 الصفحات الرئيسية</h3>
+            <ul>
+                <li><strong>صفحة الإحصائيات:</strong> تعرض رسوم بيانية تفاعلية توضح توزيع البيانات حسب الدوائر،
+                    الصفات، أسباب الزيارة، والأيام</li>
+                <li><strong>صفحة الإحصائيات الشاملة:</strong> تعرض تحليل تفصيلي شامل لجميع البيانات مع ترتيب وتصنيف
+                    كامل</li>
+                <li><strong>صفحة البيانات:</strong> تعرض جدول تفصيلي بجميع السجلات المدخلة مع إمكانية الفلترة والبحث
+                </li>
+                <li><strong>صفحة الجدول المبسط:</strong> تعرض البيانات الأساسية فقط بشكل مبسط</li>
+                <li><strong>صفحة إدخال البيانات:</strong> محمية بكلمة مرور، تتيح إدخال سجلات جديدة للمستفيدين</li>
+                <li><strong>صفحة الإدارة:</strong> إدارة الموظفين، الدوائر، وكلمة المرور</li>
+                <li><strong>صفحة المعلومات:</strong> تحتوي على دليل الاستخدام والمعلومات الأساسية</li>
+            </ul>
+        </div>
+        <div class="copyright">
+            <p>💡 الفكرة والتنفيذ</p>
+            <p style="font-size: 22px; margin-top: 10px;" id="copyright-text">شرف عبدالله المالكي</p>
+        </div>
+    </div>
+    <footer class="site-footer">
+        <p>جميع الحقوق محفوظة © 2024 - قسم خدمات المستفيدين</p>
+        <p style="font-size: 15px; margin-top: 8px; opacity: 0.9;">المحكمة الجزائية بمحافظة جدة - إدارة الدعاوى
+            والأحكام</p>
+        <p
+            style="font-size: 14px; margin-top: 12px; opacity: 0.85; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 10px;">
+            ⚡ تصميم: شرف المالكي</p>
+    </footer>
+    </div>
+    <script src="script.js?v=1"></script>
+</body>
+
+</html>
