@@ -80,6 +80,27 @@
                 <div style="text-align: center; margin-top: 20px; font-size: 14px; opacity: 0.7;">
                     نظام إحصائيات خدمات المستفيدين
                 </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="#" id="forgot-password-link" style="color: #379777; font-size: 13px;">هل نسيت كلمة
+                        المرور؟</a>
+                </div>
+            </div>
+
+            <!-- Recovery Modal -->
+            <div id="recovery-modal"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+                <div
+                    style="background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center;">
+                    <h3 style="color: #379777; margin-bottom: 15px;">استعادة كلمة المرور</h3>
+                    <p style="margin-bottom: 15px;">أدخل مفتاح الطوارئ لإعادة التعيين</p>
+                    <input type="password" id="recovery-key" placeholder="مفتاح الطوارئ"
+                        style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px;">
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="confirm-reset-btn" class="btn btn-primary" style="padding: 8px 15px;">تأكيد</button>
+                        <button id="cancel-reset-btn" class="btn btn-secondary"
+                            style="padding: 8px 15px;">إلغاء</button>
+                    </div>
+                </div>
             </div>
         </div>
 

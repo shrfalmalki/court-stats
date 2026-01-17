@@ -171,9 +171,42 @@ function setupLogin() {
             } else {
                 showError(result.error || 'خطأ في تسجيل الدخول');
             }
-        } catch (err) {
             console.error(err);
             showError('حدث خطأ في الاتصال بالخادم');
+        }
+    });
+
+    // Recovery Modal Logic
+    const recoveryModal = document.getElementById('recovery-modal');
+    document.getElementById('forgot-password-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        recoveryModal.style.display = 'flex';
+    });
+
+    document.getElementById('cancel-reset-btn').addEventListener('click', () => {
+        recoveryModal.style.display = 'none';
+    });
+
+    document.getElementById('confirm-reset-btn').addEventListener('click', async () => {
+        const key = document.getElementById('recovery-key').value;
+        if (!key) return alert("أدخل المفتاح");
+
+        try {
+            const res = await fetch(`${API_BASE}/admin/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recoveryKey: key })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+                recoveryModal.style.display = 'none';
+                document.getElementById('recovery-key').value = '';
+            } else {
+                alert(data.error);
+            }
+        } catch (e) {
+            alert("خطأ في الاتصال");
         }
     });
 }

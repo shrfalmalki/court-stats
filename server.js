@@ -103,6 +103,21 @@ app.post('/api/change-password', (req, res) => {
         });
     }
 });
+// Emergency Password Reset
+app.post('/api/admin/reset-password', (req, res) => {
+    const { recoveryKey } = req.body;
+    const EMERGENCY_KEY = 'admin_recovery_2024';
+
+    if (recoveryKey === EMERGENCY_KEY) {
+        db.run("UPDATE users SET password = '1234' WHERE username = 'admin'", function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            console.log("Admin password reset via emergency key");
+            res.json({ success: true, message: "تمت إعادة تعيين كلمة مرور المدير إلى: 1234" });
+        });
+    } else {
+        res.status(401).json({ error: "مفتاح الاستعادة غير صحيح" });
+    }
+});
 
 // --- Records APIs ---
 
