@@ -110,7 +110,13 @@ function setupLogin() {
 
     // Clear error on input
     passwordInput.addEventListener('input', () => errorMsg.style.display = 'none');
-    typeSelect.addEventListener('change', () => errorMsg.style.display = 'none');
+    typeSelect.addEventListener('change', () => {
+        errorMsg.style.display = 'none';
+        const val = typeSelect.value;
+        const display = document.getElementById('login-username-display');
+        if (val === 'admin') display.value = 'admin';
+        else display.value = val;
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
